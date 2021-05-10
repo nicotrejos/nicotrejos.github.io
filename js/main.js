@@ -47,7 +47,7 @@ var today = getTodayDate();
 var monthName = formatNames('month', useMonthShort);
 var dayName;
 
-// Get data from json file
+// Get data from json file (ES6 (Promise not support IE11))
 function getJSON(country) {
     return fetch('/holidays/' + country + '.json')
         .then(response => response.json())
