@@ -44,16 +44,22 @@
                             <label for="dateLength">Number of days</label>
                         </p>
                         <p class="form-block">
-                            <input type="checkbox" name="holidays" id="holidays-int" data-validation="required">
-                            <label for="holidays-us">International</label>
+                            <label>
+								<input type="radio" name="holidays" id="holidays-int" value="int" data-validation="required">
+								International
+							</label>
                         </p>
                         <p class="form-block">
-                            <input type="checkbox" name="holidays" id="holidays-cr" data-validation="required">
-                            <label for="holidays-us">Costa Rica</label>
+                            <label>
+								<input type="radio" name="holidays" id="holidays-cr" value="cr" data-validation="required">
+								Costa Rica
+							</label>
                         </p>
                         <p class="form-block">
-                            <input type="checkbox" name="holidays" id="holidays-us" data-validation="required">
-                            <label for="holidays-us">United States</label>
+                            <label>
+								<input type="radio" name="holidays" id="holidays-us" value="us" data-validation="required">								
+								United States
+							</label>
                         </p>
 
                         <button type="submit" class="btn-blue">Show Calendar</button>
