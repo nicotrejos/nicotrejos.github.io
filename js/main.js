@@ -115,7 +115,7 @@ function makeCalendar(dateStart, dateLength, country) {
         startYear = parseInt(params[2]),
         formatted = startYear + '/' + startMonth + '/' + startDay;
 
-
+    // Get holidays and render
     getJSON(country).then(function(data) {
         holidays = data;
 
@@ -212,6 +212,7 @@ function makeCalendar(dateStart, dateLength, country) {
 
         let elements = document.querySelectorAll('.holiday');
 
+        // Add event in span class="holiday"
         elements.forEach(function(element) {
             element.addEventListener('click', function() {
                 alert(element.dataset.name);
