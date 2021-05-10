@@ -14,14 +14,17 @@ var useMonthShort = false,
 
 // Validation rules
 const validations = {
-    required: function(value) {
-        return value !== '';
+    required: function(input) {
+        return input.value !== '';
     },
-    dateFormat: function(value) {
-        return value.match(/^((0[13578]|1[02])[\/|\-](0[1-9]|[12][0-9]|3[01])[\/|\-](18|19|20)[0-9]{2})|((0[469]|11)[\/|\-](0[1-9]|[12][0-9]|30)[\/|\-](18|19|20)[0-9]{2})|((02)[\/|\-](0[1-9]|1[0-9]|2[0-8])[\/|\-](18|19|20)[0-9]{2})|((02)[\/|\-]29[\/|\-](((18|19|20)(04|08|[2468][048]|[13579][26]))|2000))$/);
+    dateFormat: function(input) {
+        return input.value.match(/^((0[13578]|1[02])[\/|\-](0[1-9]|[12][0-9]|3[01])[\/|\-](18|19|20)[0-9]{2})|((0[469]|11)[\/|\-](0[1-9]|[12][0-9]|30)[\/|\-](18|19|20)[0-9]{2})|((02)[\/|\-](0[1-9]|1[0-9]|2[0-8])[\/|\-](18|19|20)[0-9]{2})|((02)[\/|\-]29[\/|\-](((18|19|20)(04|08|[2468][048]|[13579][26]))|2000))$/);
     },
-    daysLength: function(value) {
-        return value.match(/^([1-9][0-9]{0,2})$/);
+    daysLength: function(input) {
+        return input.value.match(/^([1-9][0-9]{0,2})$/);
+    },
+    checked: function(input) {
+        return !(input.type === 'radio' && document.querySelector('input[name="' + input.getAttribute('name') + '"]:checked') === null);
     }
 };
 
@@ -29,7 +32,8 @@ const validations = {
 var messages = {
     required: 'Required field',
     dateFormat: 'Invalid date format. Please use mm/dd/yyyy',
-    daysLength: 'Use only numeric chacters between 1 and 999.'
+    daysLength: 'Use only numeric chacters between 1 and 999.',
+    checked: 'Required field'
 }
 
 
@@ -320,7 +324,8 @@ function validateForm() {
                 var inputName = inputArray[i].getAttribute('name'),
                     elError = document.getElementById(inputName + '-error');
 
-                if (!validations[rules[j]](inputArray[i].value)) {
+                if (!validations[rules[j]](inputArray[i])) {
+
                     e.preventDefault();
 
                     if (!elError) {
