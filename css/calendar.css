@@ -125,3 +125,9 @@
     color: #fff;
     cursor: default;
 }
+
+.month ul.week_days>li.holiday,
+.month ol.week_days>li.holiday {
+    background-color: #3d9438;
+    cursor: pointer;
+}

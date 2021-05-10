@@ -47,8 +47,13 @@ var today = getTodayDate();
 var monthName = formatNames('month', useMonthShort);
 var dayName;
 
-
-
+// Get data from json file
+function getJSON(country) {
+    return fetch('/holidays/' + country + '.json')
+        .then(response => response.json())
+        .then(file => file)
+        .catch(err => console.log(err));
+}
 
 /*
  *  Helpers
@@ -99,7 +104,7 @@ function formatNames(type, useShort) {
 }
 
 // Make calendar
-function makeCalendar(dateStart, dateLength) {
+function makeCalendar(dateStart, dateLength, country) {
     // Parse dateLength value just to make sure we work with an integer
     dateLength = parseInt(dateLength);
 
@@ -110,90 +115,110 @@ function makeCalendar(dateStart, dateLength) {
         startYear = parseInt(params[2]),
         formatted = startYear + '/' + startMonth + '/' + startDay;
 
-    // Create new month structure
-    createNewMonth(startMonth, startYear);
 
-    // Define temporal variables for loop
-    var tempDay, tempMonth, tempYear, monthLimit, firstDay, tempCount = 0;
+    getJSON(country).then(function(data) {
+        holidays = data;
 
-    // Iterate on user input length
-    for (var j = 0; j <= dateLength; j++) {
-        var isLast = (j === dateLength);
+        // Create new month structure
+        createNewMonth(startMonth, startYear);
 
-        // First iteration (staring day)
-        if (j === 0) {
-            tempDay = startDay;
-            tempMonth = startMonth;
-            tempYear = startYear;
-            monthLimit = totalDaysInMonth(tempYear, tempMonth);
-            firstDay = firstDayOfMonth(tempYear, tempMonth);
+        // Define temporal variables for loop
+        var tempDay, tempMonth, tempYear, monthLimit, firstDay, tempCount = 0;
 
-            // Fix empty spaces array iteration length if week starts on monday
-            var loopLen = tempDay - 1;
+        // Iterate on user input length
+        for (var j = 0; j <= dateLength; j++) {
+            var isLast = (j === dateLength);
 
-            // Add all invalid day spaces before start date
-            addEmptyDaySpaces(tempYear, tempMonth, loopLen);
-            // Current day number exceeds month total days
-        } else if (tempDay + tempCount > monthLimit && !isLast) {
-            // Reset temporal day counts
-            tempCount = 0;
-            tempDay = 1;
+            // First iteration (staring day)
+            if (j === 0) {
+                tempDay = startDay;
+                tempMonth = startMonth;
+                tempYear = startYear;
+                monthLimit = totalDaysInMonth(tempYear, tempMonth);
+                firstDay = firstDayOfMonth(tempYear, tempMonth);
 
-            // Reset temporal month and increment by one temporal year variable
-            // if current month exceeds maximum amount of months in a year (11 > December)
-            if (tempMonth === 11) {
-                tempYear = tempYear + 1;
-                tempMonth = 0;
-                // else, increment temporal month variable by one
+                // Fix empty spaces array iteration length if week starts on monday
+                var loopLen = tempDay - 1;
+
+                // Add all invalid day spaces before start date
+                addEmptyDaySpaces(tempYear, tempMonth, loopLen);
+                // Current day number exceeds month total days
+            } else if (tempDay + tempCount > monthLimit && !isLast) {
+                // Reset temporal day counts
+                tempCount = 0;
+                tempDay = 1;
+
+                // Reset temporal month and increment by one temporal year variable
+                // if current month exceeds maximum amount of months in a year (11 > December)
+                if (tempMonth === 11) {
+                    tempYear = tempYear + 1;
+                    tempMonth = 0;
+                    // else, increment temporal month variable by one
+                } else {
+                    tempMonth = tempMonth + 1;
+                }
+
+                // Reset month limits and get new month's first day
+                monthLimit = totalDaysInMonth(tempYear, tempMonth);
+                firstDay = firstDayOfMonth(tempYear, tempMonth);
+
+                // Create new month structure
+                createNewMonth(tempMonth, tempYear);
+            }
+
+            if (!isLast) {
+                var $month = document.getElementById(monthName[tempMonth] + '_' + tempYear);
+                let $day_cell = document.createElement('li');
+                let $day_name = document.createElement('span');
+
+                // Add correct day number for new month structures
+                $day_name.innerText = tempDay + tempCount;
+
+                var weekend = (tempDay + tempCount - 1) + firstDay,
+                    dateString = (tempDay + tempCount) + '/' + tempMonth;
+
+                // Check if day is weekend and add class name for styling purposes
+                if (weekend % 7 === 0 || (weekend + 1) % 7 === 0) {
+                    $day_cell.classList.add('weekend');
+                }
+
+                // Check if day is today and add class name for styling purposes
+                if (dateString + '/' + tempYear === today) {
+                    $day_cell.classList.add('today');
+                }
+
+                // Add class holiday
+                if (holidays[dateString]) {
+                    $day_cell.classList.add('holiday');
+                    $day_cell.dataset.name = holidays[dateString][0].name;
+                }
+
+                // Append day name to month table container
+                $day_cell.appendChild($day_name);
+                $month.appendChild($day_cell);
             } else {
-                tempMonth = tempMonth + 1;
+                // Add all invalid day spaces after end date
+                fillEmptyMonth(tempYear, tempMonth, tempDay + tempCount, monthLimit);
             }
 
-            // Reset month limits and get new month's first day
-            monthLimit = totalDaysInMonth(tempYear, tempMonth);
-            firstDay = firstDayOfMonth(tempYear, tempMonth);
-
-            // Create new month structure
-            createNewMonth(tempMonth, tempYear);
+            // Increment temp day counter
+            tempCount++;
         }
 
-        if (!isLast) {
-            var $month = document.getElementById(monthName[tempMonth] + '_' + tempYear);
-            let $day_cell = document.createElement('li');
-            let $day_name = document.createElement('span');
+        // Remove loading class after all days/months are rendered
+        window.setTimeout(function() {
+            cal.parentNode.classList.remove('loading');
+        }, 1500);
 
-            // Add correct day number for new month structures
-            $day_name.innerText = tempDay + tempCount;
+        let elements = document.querySelectorAll('.holiday');
 
-            var weekend = (tempDay + tempCount - 1) + firstDay,
-                dateString = (tempDay + tempCount) + '/' + tempMonth;
+        elements.forEach(function(element) {
+            element.addEventListener('click', function() {
+                alert(element.dataset.name);
+            });
+        });
 
-            // Check if day is weekend and add class name for styling purposes
-            if (weekend % 7 === 0 || (weekend + 1) % 7 === 0) {
-                $day_cell.classList.add('weekend');
-            }
-
-            // Check if day is today and add class name for styling purposes
-            if (dateString + '/' + tempYear === today) {
-                $day_cell.classList.add('today');
-            }
-
-            // Append day name to month table container
-            $day_cell.appendChild($day_name);
-            $month.appendChild($day_cell);
-        } else {
-            // Add all invalid day spaces after end date
-            fillEmptyMonth(tempYear, tempMonth, tempDay + tempCount, monthLimit);
-        }
-
-        // Increment temp day counter
-        tempCount++;
-    }
-
-    // Remove loading class after all days/months are rendered
-    window.setTimeout(function() {
-        cal.parentNode.classList.remove('loading');
-    }, 1500);
+    });
 }
 
 function createNewMonth(curMonth, curYear) {
@@ -291,7 +316,6 @@ function fillEmptyMonth(year, month, start, length) {
     }
 }
 
-
 // Validate form data and submit
 function validateForm() {
     var formElem = document.getElementById('cal_form'),
@@ -367,9 +391,10 @@ function validateForm() {
             let btn = document.querySelector('button[type="submit"]');
             btn.innerHTML = "Update Calendar"
 
+            let country = document.querySelector('input[name="' + inputArray[2].getAttribute('name') + '"]:checked').value;
 
             cal.scrollTop = 0;
-            makeCalendar(inputArray[0].value, inputArray[1].value);
+            makeCalendar(inputArray[0].value, inputArray[1].value, country);
         }
 
     }, false);
