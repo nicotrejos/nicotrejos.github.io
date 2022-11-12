@@ -7,6 +7,8 @@
 const cal = document.getElementById('calendar');
 const main = document.getElementsByTagName('main')[0];
 
+
+
 // Customization variables
 var useMonthShort = false,
 	useDayShort = true;
@@ -99,7 +101,9 @@ function formatNames(type, useShort) {
 }
 
 // Make calendar
-function makeCalendar(dateStart, dateLength) {
+function makeCalendar(dateStart, dateLength, countryCode) {
+	/* getting country code json */
+	countryHolidays = getJsonCountryHolidays(countryCode);
 	// Parse dateLength value just to make sure we work with an integer
 	dateLength = parseInt(dateLength);
 
@@ -293,6 +297,46 @@ function fillEmptyMonth(year, month, start, length) {
 }
 
 
+async function getJsonCountryHolidays(countryCode) {
+	
+	const jsonPath = "/holidays/";
+	const countries = [
+		'cr',
+		'us',
+		'int'
+	];
+	var prefix = countries.filter((data)=> data == countryCode);
+	var uri ="";
+	
+	if( prefix.length > 0 ) {
+		uri = jsonPath + prefix[0]+".json";
+	} else {
+		uri = jsonPath + countries[2]+".json";
+	}
+
+	const countryHolidays = await fetch(uri).then((res)=> res.json()).then((_holidays)=>{
+		
+		var allHolidays = [];
+		for(var key in _holidays) {
+			var monthday = key.split("/");
+			
+			if( allHolidays.filter((month, k)=>(k == monthday[1])).length== 0) {
+				allHolidays[monthday[1]] = [];
+			}
+
+			allHolidays[monthday[1]].push({day: monthday[0], holiday:_holidays[key][0].name });
+
+		}
+		return allHolidays;
+
+
+	});	
+
+	//console.log(countryHolidays);
+
+	return countryHolidays;
+}
+
 // Validate form data and submit
 function validateForm() {
 	var formElem = document.getElementById('cal_form'),
@@ -363,7 +407,7 @@ function validateForm() {
 			}
 
 			cal.scrollTop = 0;
-			makeCalendar(inputArray[0].value, inputArray[1].value);
+			makeCalendar(inputArray[0].value, inputArray[1].value, inputArray[2].value);
 
 			var button = e.target.querySelectorAll("button")[0];
 			button.innerHTML = button.innerText = "Update Calendar"; 
