@@ -125,3 +125,9 @@
 	background-color: #444444;
 	color: #ddd;
 }
+
+.month ul > li.holiday > .disabled,
+.month ol > li.holiday > .disabled {
+	background-color: #3d9438;
+	color: #333;
+}

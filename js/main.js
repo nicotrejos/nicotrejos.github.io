@@ -103,7 +103,7 @@ function formatNames(type, useShort) {
 // Make calendar
 function makeCalendar(dateStart, dateLength, countryCode) {
 	/* getting country code json */
-	countryHolidays = getJsonCountryHolidays(countryCode);
+	//countryHolidays = getJsonCountryHolidays(countryCode);
 	// Parse dateLength value just to make sure we work with an integer
 	dateLength = parseInt(dateLength);
 
@@ -114,6 +114,23 @@ function makeCalendar(dateStart, dateLength, countryCode) {
 		startYear = parseInt(params[2]),
 		formatted = startYear + '/' + startMonth + '/' + startDay;
 
+	
+
+	let final = async function ($theDay,$day_name, $day_cell, $month, isLast,countryCode,startMonth ) {var holidayArr = await getJsonCountryHolidays($theDay,countryCode,startMonth); 
+		if( !isLast ) {
+			$day_cell.appendChild($day_name);
+			
+			if( holidayArr.length > 0 ) {
+				$day_cell.classList.add("holiday");
+			}
+			$month.appendChild($day_cell);
+		} else {
+			fillEmptyMonth(tempYear, tempMonth, $theDay, monthLimit,countryCode);
+		}		
+		
+	}
+	
+	
 	// Create new month structure
 	createNewMonth(startMonth, startYear);
 
@@ -160,11 +177,12 @@ function makeCalendar(dateStart, dateLength, countryCode) {
 			// Create new month structure
 			createNewMonth(tempMonth, tempYear);
 		}
-
+		var $theDay = tempDay + tempCount;
 		if ( !isLast ) {
 			var $month = document.getElementById(monthName[tempMonth] +  '_' + tempYear);
 			let $day_cell = document.createElement('li');
 			let $day_name = document.createElement('span');
+			
 
 			// Add correct day number for new month structures
 			$day_name.innerText = tempDay + tempCount;
@@ -183,11 +201,12 @@ function makeCalendar(dateStart, dateLength, countryCode) {
 			}
 
 			// Append day name to month table container
-			$day_cell.appendChild($day_name);
-			$month.appendChild($day_cell);
+			
+			final($theDay,$day_name, $day_cell, $month, false,countryCode,startMonth);
+			
 		} else {
 			// Add all invalid day spaces after end date
-			fillEmptyMonth(tempYear, tempMonth, tempDay + tempCount, monthLimit);
+			final($theDay,"", null, null, true,countryCode,startMonth);
 		}
 
 		// Increment temp day counter
@@ -277,7 +296,7 @@ function addEmptyDaySpaces(year, month, length) {
 }
 
 // Fill days on calendar after user input length
-function fillEmptyMonth(year, month, start, length) {
+async function  fillEmptyMonth(year, month, start, length,countryCode ) {
 	var firstDay = firstDayOfMonth(year, month);
 	var monthId =  monthName[month] + '_' + year;
 	var $month = document.getElementById(monthId);
@@ -289,6 +308,18 @@ function fillEmptyMonth(year, month, start, length) {
 
 		$day_name.className = 'disabled';
 		$day_name.innerText = i + 1;
+		
+		holidayArr= await getJsonCountryHolidays(i + 1, countryCode, month); 
+
+		console.log(holidayArr);
+
+		if( holidayArr.length > 0 ) {
+			console.log(parseInt(holidayArr[0].day) ,  i + 1);
+			if(parseInt(holidayArr[0].day) == i + 1)
+			{
+				$day_cell.classList.add("holiday");
+			}	
+		}
 
 		// Append month name to month table container
 		$day_cell.appendChild($day_name);
@@ -297,7 +328,7 @@ function fillEmptyMonth(year, month, start, length) {
 }
 
 
-async function getJsonCountryHolidays(countryCode) {
+async function getJsonCountryHolidays($theDay,countryCode, startMonth) {
 	
 	const jsonPath = "/holidays/";
 	const countries = [
@@ -332,9 +363,16 @@ async function getJsonCountryHolidays(countryCode) {
 
 	});	
 
-	//console.log(countryHolidays);
+	const getHolidayDay = countryHolidays.filter((data2,key)=> key == startMonth);
+	var holiday_ = getHolidayDay[0].filter((data)=>{
+		return data.day == $theDay;
+	});
 
-	return countryHolidays;
+	if ( holiday_.length > 0) {
+		return holiday_;
+	} else {
+		return [];
+	}
 }
 
 // Validate form data and submit
