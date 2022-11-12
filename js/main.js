@@ -189,6 +189,7 @@ function makeCalendar(dateStart, dateLength) {
 	// Remove loading class after all days/months are rendered
 	window.setTimeout(function() {
 		cal.parentNode.classList.remove('loading');
+
 	}, 1500);
 }
 
@@ -359,6 +360,9 @@ function validateForm() {
 
 			cal.scrollTop = 0;
 			makeCalendar(inputArray[0].value, inputArray[1].value);
+
+			var button = e.target.querySelectorAll("button")[0];
+			button.innerHTML = button.innerText = "Update Calendar"; 
 		}
 
 	}, false);
