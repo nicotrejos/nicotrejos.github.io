@@ -26,7 +26,7 @@ const validations = {
 		return value.match(/^([1-9][0-9]{0,2})$/);
 	},
 	countryCode: (value) => {
-		return (value.length == 2);
+		return (value.length == 2 && !parseInt(value));
 	}
 };
 
@@ -114,13 +114,29 @@ function makeCalendar(dateStart, dateLength, countryCode) {
 		startYear = parseInt(params[2]),
 		formatted = startYear + '/' + startMonth + '/' + startDay;
 
-	
-
-	let final = async function ($theDay,$day_name, $day_cell, $month, isLast,countryCode,startMonth ) {var holidayArr = await getJsonCountryHolidays($theDay,countryCode,startMonth); 
+	/**
+	 * async function to get the holidays, apply the class to cell selected and not selected.
+	 * @param {integer} $theDay 
+	 * @param {object} $day_name 
+	 * @param {object} $day_cell 
+	 * @param {integer} $month 
+	 * @param {boolean} isLast 
+	 * @param {string} countryCode 
+	 * @param {integer} startMonth 
+	 */
+	let final = async function ($theDay,$day_name, $day_cell, $month, isLast,countryCode,startMonth ) {
+		var holidayArr = await getJsonCountryHolidays($theDay,countryCode,startMonth); 
 		if( !isLast ) {
 			$day_cell.appendChild($day_name);
 			
 			if( holidayArr.length > 0 ) {
+				//setting attributes
+				$day_cell.setAttribute('data-day',$theDay);
+				$day_cell.setAttribute('data-country',countryCode);
+				$day_cell.setAttribute('data-month',startMonth);
+				//adding event to click
+				$day_cell.addEventListener("click", btnClick);	
+
 				$day_cell.classList.add("holiday");
 			}
 			$month.appendChild($day_cell);
@@ -199,13 +215,10 @@ function makeCalendar(dateStart, dateLength, countryCode) {
 			if ( dateString + '/' + tempYear === today ) {
 				$day_cell.classList.add('today');
 			}
-
-			// Append day name to month table container
 			
 			final($theDay,$day_name, $day_cell, $month, false,countryCode,startMonth);
 			
 		} else {
-			// Add all invalid day spaces after end date
 			final($theDay,"", null, null, true,countryCode,startMonth);
 		}
 
@@ -308,15 +321,21 @@ async function  fillEmptyMonth(year, month, start, length,countryCode ) {
 
 		$day_name.className = 'disabled';
 		$day_name.innerText = i + 1;
-		
-		holidayArr= await getJsonCountryHolidays(i + 1, countryCode, month); 
+		var $theDay = i + 1;
+		holidayArr= await getJsonCountryHolidays(i + 1, countryCode, month);
 
-		console.log(holidayArr);
-
+		//valid if the array is not empty to assign the attributes, add class to cell and event to show the holiday name
 		if( holidayArr.length > 0 ) {
 			console.log(parseInt(holidayArr[0].day) ,  i + 1);
 			if(parseInt(holidayArr[0].day) == i + 1)
 			{
+				//setting attributes
+				$day_cell.setAttribute('data-day',$theDay);
+				$day_cell.setAttribute('data-country',countryCode);
+				$day_cell.setAttribute('data-month',month);
+				//adding event to click
+				$day_cell.addEventListener("click", btnClick);	
+
 				$day_cell.classList.add("holiday");
 			}	
 		}
@@ -327,7 +346,13 @@ async function  fillEmptyMonth(year, month, start, length,countryCode ) {
 	}
 }
 
-
+/**
+ * async function to get from country code and json file the holidays.
+ * @param {integer} $theDay 
+ * @param {string} countryCode 
+ * @param {integer} startMonth 
+ * @returns array
+ */
 async function getJsonCountryHolidays($theDay,countryCode, startMonth) {
 	
 	const jsonPath = "/holidays/";
@@ -452,6 +477,31 @@ function validateForm() {
 		}
 
 	}, false);
+}
+
+/**
+ * Callback click to show holiday description
+ * @param {event} e 
+ */
+function btnClick(e) {
+	var $btn = e.currentTarget;
+	var country = $btn.getAttribute("data-country");
+	var month = $btn.getAttribute("data-month");
+	var day = $btn.getAttribute("data-day");
+
+	/**
+	 * Async function to get the holiday description fron json file by country code, month and day
+	 * @param {integer} day 
+	 * @param {string} country 
+	 * @param {integer} month 
+	 */
+	var clickHoliday = async function(day, country, month) { 
+		var	$result = await getJsonCountryHolidays(day, country, month);
+		alert($result[0].holiday);
+		
+	}
+
+	clickHoliday(day, country, month);
 }
 
 validateForm();

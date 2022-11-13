@@ -130,4 +130,5 @@
 .month ol > li.holiday > .disabled {
 	background-color: #3d9438;
 	color: #333;
+	cursor: pointer;
 }
